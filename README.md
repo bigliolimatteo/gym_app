@@ -1,16 +1,26 @@
-# React + Vite
+# GymTracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite + Tailwind + Supabase. Deployed to GitHub Pages (`base: /gym_app/`).
 
-Currently, two official plugins are available:
+## Auth & roles
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Utente**: registrazione con ruolo Utente → dashboard, scheda assegnata dal trainer (sola lettura), allenamento, storico.
+- **Personal trainer**: registrazione come trainer → elenco clienti, aggiunta cliente per **email** (l’utente deve esistere già), creazione/modifica scheda per ogni cliente, storico del cliente.
 
-## React Compiler
+Variabili ambiente (locale: `.env`, CI: GitHub Secrets):
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-## Expanding the ESLint configuration
+In Supabase Dashboard → Authentication → URL configuration, imposta **Site URL** e redirect consentiti per il dominio GitHub Pages se usi conferma email.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Sviluppo
+
+```bash
+npm install
+npm run dev
+```
+
+```bash
+npm run build
+```

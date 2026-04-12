@@ -1,25 +1,102 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Trash2, ChevronDown, ChevronUp, TrendingUp, Calendar, Dumbbell } from 'lucide-react'
 import { EXERCISES, MUSCLE_GROUPS } from '../data/exercises'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 
-export default function WorkoutHistory({ logs, deleteLog }) {
+function mapRowsToLogs(rows) {
+  return (rows || []).map((log) => {
+    const sets = log.workout_log_sets || []
+    const byExercise = {}
+    for (const s of sets) {
+      if (!byExercise[s.exercise_id]) byExercise[s.exercise_id] = []
+      byExercise[s.exercise_id].push({
+        weight: Number(s.weight) || 0,
+        reps: Number(s.reps) || 0,
+        set_number: s.set_number ?? 0,
+      })
+    }
+    const exercises = Object.entries(byExercise).map(([exerciseId, arr]) => ({
+      exerciseId,
+      sets: arr.sort((a, b) => a.set_number - b.set_number).map(({ weight, reps }) => ({ weight, reps })),
+    }))
+    return {
+      id: log.id,
+      date: log.date,
+      planName: log.plan_name || 'Allenamento',
+      exercises,
+    }
+  })
+}
+
+export default function WorkoutHistory({ forUserId, embedded }) {
+  const { user } = useAuth()
+  const [logs, setLogs] = useState([])
+  const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState(null)
-  const [view, setView] = useState('list') // 'list' | 'progress'
+  const [view, setView] = useState('list')
   const [progressExercise, setProgressExercise] = useState('')
+
+  const targetUserId = forUserId || user?.id
+
+  const loadLogs = useCallback(async () => {
+    if (!targetUserId) {
+      setLogs([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('workout_logs')
+      .select(
+        `
+        id,
+        plan_name,
+        date,
+        workout_log_sets (
+          exercise_id,
+          set_number,
+          weight,
+          reps,
+          completed
+        )
+      `,
+      )
+      .eq('user_id', targetUserId)
+      .order('date', { ascending: false })
+
+    if (error) {
+      console.error(error)
+      setLogs([])
+    } else {
+      setLogs(mapRowsToLogs(data))
+    }
+    setLoading(false)
+  }, [targetUserId])
+
+  useEffect(() => {
+    loadLogs()
+  }, [loadLogs])
+
+  const deleteLog = async (id) => {
+    if (forUserId) return
+    const { error } = await supabase.from('workout_logs').delete().eq('id', id)
+    if (!error) await loadLogs()
+  }
 
   const sortedLogs = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date))
 
-  const allLoggedExerciseIds = [...new Set(logs.flatMap(l => l.exercises.map(e => e.exerciseId)))]
+  const allLoggedExerciseIds = [...new Set(logs.flatMap((l) => l.exercises.map((e) => e.exerciseId)))]
 
   const getProgressData = (exerciseId) => {
     return sortedLogs
-      .filter(log => log.exercises.some(e => e.exerciseId === exerciseId))
+      .filter((log) => log.exercises.some((e) => e.exerciseId === exerciseId))
       .reverse()
-      .map(log => {
-        const ex = log.exercises.find(e => e.exerciseId === exerciseId)
-        const maxWeight = Math.max(...ex.sets.map(s => s.weight))
+      .map((log) => {
+        const ex = log.exercises.find((e) => e.exerciseId === exerciseId)
+        const maxWeight = Math.max(...ex.sets.map((s) => s.weight))
         const totalVolume = ex.sets.reduce((a, s) => a + s.weight * s.reps, 0)
-        const maxReps = Math.max(...ex.sets.map(s => s.reps))
+        const maxReps = Math.max(...ex.sets.map((s) => s.reps))
         return {
           date: new Date(log.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }),
           fullDate: new Date(log.date).toLocaleDateString('it-IT'),
@@ -31,15 +108,25 @@ export default function WorkoutHistory({ logs, deleteLog }) {
       })
   }
 
+  if (loading) {
+    return <p className="text-gray-500">Caricamento storico…</p>
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Storico Allenamenti</h1>
-          <p className="text-gray-500 text-sm mt-1">{logs.length} allenamenti registrati</p>
-        </div>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        {!embedded && (
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Storico Allenamenti</h1>
+            <p className="text-gray-500 text-sm mt-1">{logs.length} allenamenti registrati</p>
+          </div>
+        )}
+        {embedded && (
+          <p className="text-gray-500 text-sm w-full sm:w-auto">{logs.length} allenamenti registrati</p>
+        )}
         <div className="flex bg-gray-100 rounded-xl p-1">
           <button
+            type="button"
             onClick={() => setView('list')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               view === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
@@ -49,6 +136,7 @@ export default function WorkoutHistory({ logs, deleteLog }) {
             Lista
           </button>
           <button
+            type="button"
             onClick={() => setView('progress')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               view === 'progress' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
@@ -64,19 +152,21 @@ export default function WorkoutHistory({ logs, deleteLog }) {
         <div className="space-y-4">
           <select
             value={progressExercise}
-            onChange={e => setProgressExercise(e.target.value)}
+            onChange={(e) => setProgressExercise(e.target.value)}
             className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">Seleziona un esercizio</option>
-            {allLoggedExerciseIds.map(id => {
-              const ex = EXERCISES.find(e => e.id === id)
-              return <option key={id} value={id}>{ex?.name || id}</option>
+            {allLoggedExerciseIds.map((id) => {
+              const ex = EXERCISES.find((e) => e.id === id)
+              return (
+                <option key={id} value={id}>
+                  {ex?.name || id}
+                </option>
+              )
             })}
           </select>
 
-          {progressExercise && (
-            <ProgressChart exerciseId={progressExercise} data={getProgressData(progressExercise)} />
-          )}
+          {progressExercise && <ProgressChart exerciseId={progressExercise} data={getProgressData(progressExercise)} />}
         </div>
       ) : (
         <>
@@ -88,22 +178,20 @@ export default function WorkoutHistory({ logs, deleteLog }) {
             </div>
           ) : (
             <div className="space-y-3">
-              {sortedLogs.map(log => {
+              {sortedLogs.map((log) => {
                 const isExpanded = expandedId === log.id
                 const totalSets = log.exercises.reduce((a, e) => a + e.sets.length, 0)
-                const totalVolume = log.exercises.reduce((a, e) =>
-                  a + e.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
+                const totalVolume = log.exercises.reduce((a, e) => a + e.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
 
                 return (
                   <div key={log.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <button
+                      type="button"
                       onClick={() => setExpandedId(isExpanded ? null : log.id)}
                       className="w-full p-4 flex items-center gap-4 text-left"
                     >
                       <div className="w-12 h-12 rounded-xl bg-primary-50 flex flex-col items-center justify-center">
-                        <span className="text-lg font-bold text-primary-700">
-                          {new Date(log.date).getDate()}
-                        </span>
+                        <span className="text-lg font-bold text-primary-700">{new Date(log.date).getDate()}</span>
                         <span className="text-[10px] text-primary-500 uppercase">
                           {new Date(log.date).toLocaleDateString('it-IT', { month: 'short' })}
                         </span>
@@ -120,12 +208,14 @@ export default function WorkoutHistory({ logs, deleteLog }) {
                     {isExpanded && (
                       <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
                         {log.exercises.map((ex, i) => {
-                          const exerciseData = EXERCISES.find(e => e.id === ex.exerciseId)
-                          const group = MUSCLE_GROUPS.find(g => g.id === exerciseData?.muscleGroup)
+                          const exerciseData = EXERCISES.find((e) => e.id === ex.exerciseId)
+                          const group = MUSCLE_GROUPS.find((g) => g.id === exerciseData?.muscleGroup)
                           return (
                             <div key={i} className="bg-gray-50 rounded-xl p-3">
                               <div className="flex items-center gap-2 mb-2">
-                                <span className={`w-6 h-6 rounded-md flex items-center justify-center text-white text-xs ${group?.color || 'bg-gray-400'}`}>
+                                <span
+                                  className={`w-6 h-6 rounded-md flex items-center justify-center text-white text-xs ${group?.color || 'bg-gray-400'}`}
+                                >
                                   {group?.icon}
                                 </span>
                                 <span className="font-medium text-sm text-gray-800">{exerciseData?.name || ex.exerciseId}</span>
@@ -145,13 +235,18 @@ export default function WorkoutHistory({ logs, deleteLog }) {
                             </div>
                           )
                         })}
-                        <button
-                          onClick={() => { if (confirm('Eliminare questo allenamento dallo storico?')) deleteLog(log.id) }}
-                          className="flex items-center gap-2 text-sm text-red-500 hover:text-red-600 font-medium mt-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Elimina
-                        </button>
+                        {!forUserId && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Eliminare questo allenamento dallo storico?')) deleteLog(log.id)
+                            }}
+                            className="flex items-center gap-2 text-sm text-red-500 hover:text-red-600 font-medium mt-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Elimina
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -166,7 +261,7 @@ export default function WorkoutHistory({ logs, deleteLog }) {
 }
 
 function ProgressChart({ exerciseId, data }) {
-  const exercise = EXERCISES.find(e => e.id === exerciseId)
+  const exercise = EXERCISES.find((e) => e.id === exerciseId)
 
   if (data.length === 0) {
     return (
@@ -176,14 +271,13 @@ function ProgressChart({ exerciseId, data }) {
     )
   }
 
-  const maxWeight = Math.max(...data.map(d => d.maxWeight))
-  const maxVolume = Math.max(...data.map(d => d.totalVolume))
+  const maxWeight = Math.max(...data.map((d) => d.maxWeight))
+  const maxVolume = Math.max(...data.map((d) => d.totalVolume))
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-6">
       <h3 className="font-bold text-gray-900">{exercise?.name} — Progressi</h3>
 
-      {/* Weight progression bar chart */}
       <div>
         <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
           <Dumbbell className="w-4 h-4" />
@@ -206,7 +300,6 @@ function ProgressChart({ exerciseId, data }) {
         </div>
       </div>
 
-      {/* Volume progression */}
       <div>
         <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
           <TrendingUp className="w-4 h-4" />
@@ -229,7 +322,6 @@ function ProgressChart({ exerciseId, data }) {
         </div>
       </div>
 
-      {/* Detailed table */}
       <div>
         <h4 className="text-sm font-medium text-gray-500 mb-3">Dettaglio sessioni</h4>
         <div className="overflow-x-auto">

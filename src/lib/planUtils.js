@@ -42,6 +42,18 @@ export async function fetchLatestPlanForClient(supabase, clientId, trainerId) {
   return fetchPlanWithExercises(supabase, data.id)
 }
 
+/** All plans for a trainer–client pair (newest first). */
+export async function fetchTrainerClientPlanSummaries(supabase, clientId, trainerId) {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('id, name, updated_at')
+    .eq('client_id', clientId)
+    .eq('trainer_id', trainerId)
+    .order('updated_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
 /** User: assigned plan (latest for this user as client) */
 export async function fetchUserAssignedPlan(supabase, userId) {
   const { data, error } = await supabase

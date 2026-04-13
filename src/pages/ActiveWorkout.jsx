@@ -3,11 +3,14 @@ import { Play, CheckCircle, Plus, Trash2 } from 'lucide-react'
 import { EXERCISES, MUSCLE_GROUPS } from '../data/exercises'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import PremiumTeaser from '../components/PremiumTeaser'
 import { fetchUserAssignedPlan } from '../lib/planUtils'
+import { hasWorkoutLoggedToday } from '../lib/workoutDay'
 
 export default function ActiveWorkout() {
   const { user } = useAuth()
   const [plan, setPlan] = useState(null)
+  const [alreadyLoggedToday, setAlreadyLoggedToday] = useState(false)
   const [loading, setLoading] = useState(true)
   const [workoutInProgress, setWorkoutInProgress] = useState(null)
   const [completedWorkout, setCompletedWorkout] = useState(null)
@@ -16,11 +19,16 @@ export default function ActiveWorkout() {
     if (!user?.id) return
     setLoading(true)
     try {
-      const p = await fetchUserAssignedPlan(supabase, user.id)
+      const [p, loggedToday] = await Promise.all([
+        fetchUserAssignedPlan(supabase, user.id),
+        hasWorkoutLoggedToday(supabase, user.id),
+      ])
       setPlan(p)
+      setAlreadyLoggedToday(loggedToday)
     } catch (e) {
       console.error(e)
       setPlan(null)
+      setAlreadyLoggedToday(false)
     }
     setLoading(false)
   }, [user?.id])
@@ -30,6 +38,7 @@ export default function ActiveWorkout() {
   }, [loadPlan])
 
   const startWorkout = (p) => {
+    if (alreadyLoggedToday) return
     setWorkoutInProgress({
       planId: p.id,
       planName: p.name,
@@ -80,6 +89,12 @@ export default function ActiveWorkout() {
 
   const finishWorkout = async () => {
     if (!user?.id || !workoutInProgress) return
+
+    const logged = await hasWorkoutLoggedToday(supabase, user.id)
+    if (logged) {
+      setAlreadyLoggedToday(true)
+      return
+    }
 
     const exercisesForLog = workoutInProgress.exercises
       .map((ex) => ({
@@ -142,6 +157,7 @@ export default function ActiveWorkout() {
     }
     setCompletedWorkout(log)
     setWorkoutInProgress(null)
+    setAlreadyLoggedToday(true)
     await loadPlan()
   }
 
@@ -298,6 +314,16 @@ export default function ActiveWorkout() {
           <p className="text-5xl mb-4">📋</p>
           <p className="text-gray-500 text-lg">Nessuna scheda assegnata</p>
           <p className="text-gray-400 text-sm mt-1">Il tuo personal trainer deve creare una scheda per te.</p>
+        </div>
+      ) : alreadyLoggedToday ? (
+        <div className="space-y-4">
+          <PremiumTeaser
+            title="Hai già registrato un allenamento oggi"
+            description="Con l'account gratuito puoi salvare un solo allenamento al giorno. Registrare più allenamenti nella stessa giornata sarà possibile con la modalità Premium."
+          />
+          <p className="text-sm text-gray-500">
+            {"Puoi eliminare l'allenamento di oggi dallo storico per registrarne un altro nella stessa giornata."}
+          </p>
         </div>
       ) : (
         <button

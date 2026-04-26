@@ -28,6 +28,15 @@ Per provare l'app senza registrarsi sono presenti alcuni account di esempio già
 
 Lo script di seeding è in [`supabase/migrations/20260425173600_seed_demo_accounts.sql`](supabase/migrations/20260425173600_seed_demo_accounts.sql) ed è idempotente (può essere rilanciato senza creare duplicati). Le sessioni di allenamento sono datate al passato, così ogni account utente può comunque avviare un nuovo allenamento "oggi" durante la demo.
 
+## Pagina dettaglio esercizio
+
+La pagina esercizio è ispirata alle app fitness moderne (Fitbod, Nike Training, ecc.) e propone, nell'ordine:
+
+1. **Anteprima animata del movimento** — pittogramma SVG in loop che mostra a grandi linee la traiettoria (spinta, trazione, squat, hip thrust, ecc.). Niente video YouTube: il pattern viene scelto in base a `movementPattern` definito in [`src/data/exercises.js`](src/data/exercises.js).
+2. **Video coach interno all'app** (componente [`CoachVideo`](src/components/CoachVideo.jsx)) — player HTML5 con sovrapposizione dei cue come "scapole addotte", "spingi avanti", ecc. Per agganciare un video reale basta valorizzare `coachVideoSrc` (e opzionalmente `coachVideoPoster`) sull'esercizio. Finché l'asset non è disponibile, viene mostrata una card coach animata con i `focusPoints` in evidenza, così l'utente vede comunque su cosa concentrarsi.
+3. **Su cosa concentrarsi** — i `focusPoints` dell'esercizio mostrati come check-list, anche per chi salta il video.
+4. Muscoli secondari, descrizione, passi dettagliati, consigli e (in fondo, come opzione secondaria) la ricerca su YouTube.
+
 ## Sviluppo
 
 ```bash

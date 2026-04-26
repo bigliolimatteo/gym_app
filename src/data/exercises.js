@@ -593,6 +593,145 @@ export const EXERCISES = [
   },
 ]
 
+// Metadata extra per la pagina dettaglio: pattern dell'animazione di anteprima
+// del movimento e cue chiave su cui il coach fa concentrare l'utente.
+// `coachVideoSrc` può essere popolato in seguito (asset video interno all'app);
+// se assente, viene mostrata la card "video coach" con i cue in evidenza.
+export const EXERCISE_DETAILS = {
+  'bench-press': {
+    movementPattern: 'push-bench',
+    focusPoints: ['Scapole addotte e depresse', 'Petto in fuori, gabbia alta', 'Spingi forte verso l\'alto', 'Polsi dritti, mai piegati'],
+  },
+  'panca-inclinata': {
+    movementPattern: 'push-incline',
+    focusPoints: ['Scapole bloccate sulla panca', 'Gomiti a circa 45°', 'Spingi verso l\'alto convergendo', 'Controllo nella discesa'],
+  },
+  'croci-cavi': {
+    movementPattern: 'chest-fly',
+    focusPoints: ['Gomiti morbidi, leggermente flessi', 'Movimento ad arco, non a spinta', 'Stringi i pettorali davanti', 'Niente strappi: tutto controllato'],
+  },
+  'piegamenti': {
+    movementPattern: 'push-bench',
+    focusPoints: ['Corpo in linea retta', 'Addome e glutei contratti', 'Petto verso terra, non testa', 'Spingi via il pavimento'],
+  },
+  'chest-press': {
+    movementPattern: 'push-bench',
+    focusPoints: ['Maniglie all\'altezza del petto', 'Schiena aderente allo schienale', 'Spingi in avanti senza bloccare i gomiti', 'Ritorno controllato'],
+  },
+  'lat-machine': {
+    movementPattern: 'pull-vertical',
+    focusPoints: ['Tira con i gomiti, non con le mani', 'Scapole giù e indietro', 'Petto in fuori verso la barra', 'Niente oscillazioni del busto'],
+  },
+  'rematore-bilanciere': {
+    movementPattern: 'pull-horizontal',
+    focusPoints: ['Schiena dritta, MAI arrotondata', 'Tira verso l\'addome basso', 'Gomiti vicini al corpo', 'Stringi le scapole in fondo'],
+  },
+  'trazioni': {
+    movementPattern: 'pull-vertical',
+    focusPoints: ['Parti da braccia distese (full ROM)', 'Tira con la schiena, non con le braccia', 'Mento sopra la sbarra', 'Niente kipping/oscillazione'],
+  },
+  'pulley-basso': {
+    movementPattern: 'pull-horizontal',
+    focusPoints: ['Busto eretto, petto in fuori', 'Tira verso l\'ombelico', 'Gomiti indietro, non aperti', 'Non ondeggiare avanti/indietro'],
+  },
+  'military-press': {
+    movementPattern: 'push-overhead',
+    focusPoints: ['Core attivo, glutei contratti', 'Niente iperestensione lombare', 'Spingi in alto, testa avanti a fine corsa', 'Polsi sopra i gomiti'],
+  },
+  'alzate-laterali': {
+    movementPattern: 'lateral-raise',
+    focusPoints: ['Sali fino all\'altezza spalle', 'Gomiti leggermente flessi', 'Niente slancio del busto', 'Pensa a "versare l\'acqua" in cima'],
+  },
+  'alzate-frontali': {
+    movementPattern: 'front-raise',
+    focusPoints: ['Sali fino all\'altezza spalle', 'Niente slancio con le anche', 'Pollice leggermente in alto', 'Discesa controllata'],
+  },
+  'face-pull': {
+    movementPattern: 'face-pull',
+    focusPoints: ['Cavo all\'altezza del viso', 'Tira verso fronte/orecchie', 'Apri le mani a fine corsa', 'Stringi i deltoidi posteriori'],
+  },
+  'curl-bilanciere': {
+    movementPattern: 'curl',
+    focusPoints: ['Gomiti incollati al busto', 'Niente slancio del bacino', 'Stringi i bicipiti in cima', 'Discesa controllata, non a peso morto'],
+  },
+  'curl-manubri': {
+    movementPattern: 'curl',
+    focusPoints: ['Supinazione attiva del polso', 'Gomito fermo, non si sposta', 'Picco di contrazione in alto', 'Alterna fluido, niente strappi'],
+  },
+  'curl-martello': {
+    movementPattern: 'curl',
+    focusPoints: ['Presa neutra, palmi che si guardano', 'Gomiti fissi al busto', 'Solleva fino alle spalle', 'Discesa lenta'],
+  },
+  'pushdown-cavi': {
+    movementPattern: 'pushdown',
+    focusPoints: ['Gomiti incollati al busto', 'Solo gli avambracci si muovono', 'Spingi giù fino a estensione', 'Apri la corda alla fine'],
+  },
+  'dip-parallele': {
+    movementPattern: 'dip',
+    focusPoints: ['Spalle giù, lontane dalle orecchie', 'Busto dritto = più tricipiti', 'Scendi fino a 90° ai gomiti', 'Spingi via, petto in fuori'],
+  },
+  'french-press': {
+    movementPattern: 'triceps-extension',
+    focusPoints: ['Gomiti fermi, non aperti', 'Avambracci si muovono, omero no', 'Movimento controllato', 'Non far cadere il bilanciere'],
+  },
+  'squat': {
+    movementPattern: 'squat',
+    focusPoints: ['Petto alto, schiena dritta', 'Ginocchia in linea con i piedi', 'Scendi fino a parallelo (o sotto)', 'Spingi sui talloni per risalire'],
+  },
+  'leg-press': {
+    movementPattern: 'leg-press',
+    focusPoints: ['Sedere e schiena aderenti', 'Piedi alla larghezza spalle', 'Non bloccare le ginocchia in cima', 'Scendi controllato, spingi forte'],
+  },
+  'affondi': {
+    movementPattern: 'lunge',
+    focusPoints: ['Busto eretto, sguardo avanti', 'Ginocchio anteriore non oltre la punta', 'Scendi finché ginocchio dietro sfiora', 'Spingi sul tallone avanti per risalire'],
+  },
+  'leg-curl': {
+    movementPattern: 'leg-curl',
+    focusPoints: ['Bacino incollato alla panca', 'Cuscinetto sopra i talloni', 'Stringi i femorali in cima', 'Non lasciar cadere il peso'],
+  },
+  'leg-extension': {
+    movementPattern: 'leg-extension',
+    focusPoints: ['Schiena aderente allo schienale', 'Estendi senza bloccare le ginocchia', 'Stringi i quadricipiti in cima', 'Discesa lenta'],
+  },
+  'stacco': {
+    movementPattern: 'deadlift',
+    focusPoints: ['Schiena dritta, MAI arrotondata', 'Bilanciere vicino alle gambe', 'Spingi il pavimento, non tirare', 'Anche e spalle salgono insieme'],
+  },
+  'hip-thrust': {
+    movementPattern: 'hip-thrust',
+    focusPoints: ['Spingi con i talloni', 'Stringi i glutei in cima al massimo', 'Linea retta spalle-fianchi-ginocchia', 'Niente iperestensione lombare'],
+  },
+  'slancio-glutei': {
+    movementPattern: 'glute-kickback',
+    focusPoints: ['Schiena neutra, niente inarcamento', 'Spingi indietro, non in alto', 'Stringi il gluteo a fine corsa', 'Movimento lento e controllato'],
+  },
+  'crunch': {
+    movementPattern: 'crunch',
+    focusPoints: ['Niente trazione sul collo', 'Stacca solo le spalle, non la schiena', 'Espira nella salita', 'Contrazione del retto addominale'],
+  },
+  'plank': {
+    movementPattern: 'plank',
+    focusPoints: ['Linea retta testa-talloni', 'Addome e glutei contratti', 'Bacino né alto né basso', 'Respira normalmente'],
+  },
+  'russian-twist': {
+    movementPattern: 'twist',
+    focusPoints: ['Petto in fuori, schiena lunga', 'Ruota dal busto, non solo dalle braccia', 'Tocca a destra e sinistra', 'Piedi sollevati per più difficoltà'],
+  },
+  'wrist-curl': {
+    movementPattern: 'wrist-curl',
+    focusPoints: ['Avambracci appoggiati saldi', 'Movimento solo dal polso', 'Range completo (giù e su)', 'Peso leggero, alte ripetizioni'],
+  },
+  'calf-raise': {
+    movementPattern: 'calf-raise',
+    focusPoints: ['Tallone giù: massimo allungamento', 'Salita fino sulle punte', 'Tieni 1-2 secondi in cima', 'Discesa lenta e controllata'],
+  },
+}
+
+export function getExerciseDetails(id) {
+  return EXERCISE_DETAILS[id] || { movementPattern: 'generic', focusPoints: [] }
+}
+
 export function getExercisesByMuscleGroup(muscleGroupId) {
   return EXERCISES.filter(e => e.muscleGroup === muscleGroupId)
 }

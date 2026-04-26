@@ -1,6 +1,8 @@
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Target, Wrench, BarChart3, CheckCircle2, Lightbulb } from 'lucide-react'
-import { getExerciseById, getMuscleGroupById } from '../data/exercises'
+import { ArrowLeft, ExternalLink, Target, Wrench, BarChart3, CheckCircle2, Lightbulb, Zap } from 'lucide-react'
+import { getExerciseById, getMuscleGroupById, getExerciseDetails } from '../data/exercises'
+import MovementAnimation from '../components/MovementAnimation'
+import CoachVideo from '../components/CoachVideo'
 
 export default function ExerciseDetail() {
   const { id } = useParams()
@@ -17,6 +19,7 @@ export default function ExerciseDetail() {
 
   const group = getMuscleGroupById(exercise.muscleGroup)
   const secondaryGroups = exercise.secondaryMuscles.map(getMuscleGroupById).filter(Boolean)
+  const details = getExerciseDetails(exercise.id)
 
   const difficultyStars = { principiante: 1, intermedio: 2, avanzato: 3 }
 
@@ -52,6 +55,40 @@ export default function ExerciseDetail() {
           </div>
         </div>
       </div>
+
+      {/* Movement preview animation (visione tipo app) */}
+      <MovementAnimation
+        pattern={details.movementPattern}
+        accentClass={group?.color}
+        label={`Movimento · ${exercise.name}`}
+      />
+
+      {/* Coach video interno (no YouTube): spiega come fare e su cosa concentrarsi */}
+      <CoachVideo
+        src={exercise.coachVideoSrc}
+        poster={exercise.coachVideoPoster}
+        focusPoints={details.focusPoints}
+      />
+
+      {/* Focus points / cue da ricordare */}
+      {details.focusPoints.length > 0 && (
+        <div className="bg-gradient-to-br from-primary-50 to-white rounded-2xl p-5 shadow-sm border border-primary-100">
+          <h2 className="font-semibold text-primary-900 mb-3 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-primary-500" />
+            Su cosa concentrarsi
+          </h2>
+          <ul className="grid sm:grid-cols-2 gap-2">
+            {details.focusPoints.map((cue, i) => (
+              <li key={i} className="flex items-start gap-2 bg-white rounded-xl px-3 py-2 border border-primary-100">
+                <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                  {i + 1}
+                </span>
+                <span className="text-sm text-gray-700 pt-0.5">{cue}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Secondary muscles */}
       {secondaryGroups.length > 0 && (
@@ -109,16 +146,16 @@ export default function ExerciseDetail() {
         </div>
       )}
 
-      {/* Video link */}
+      {/* External fallback (link YouTube) — secondario, non più CTA principale */}
       {exercise.videoUrl && (
         <a
           href={exercise.videoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-4 bg-red-500 text-white rounded-2xl font-semibold hover:bg-red-600 transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 w-full py-3 text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
-          <ExternalLink className="w-5 h-5" />
-          Cerca video tutorial su YouTube
+          <ExternalLink className="w-4 h-4" />
+          Cerca anche video tutorial esterni su YouTube
         </a>
       )}
     </div>
